@@ -6,6 +6,15 @@ import authRoutes from './routes/auth';
 import analysisRoutes from './routes/analysis';
 
 dotenv.config();
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err.message, err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('UNHANDLED REJECTION:', reason);
+  process.exit(1);
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
