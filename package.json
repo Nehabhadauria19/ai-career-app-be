@@ -5,7 +5,7 @@
     "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "vercel-build": "tsc"
+    
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

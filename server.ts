@@ -1,14 +1,10 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import authRoutes from './routes/auth';
 import analysisRoutes from './routes/analysis';
+import { connectDB } from './lib/mongodb';
 
 const app = express();
-
-console.log('=== SERVER STARTING ===');
-console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
-console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
 
 app.use(cors({
   origin: [
@@ -22,26 +18,34 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Connect DB middleware — runs before every request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('DB connection failed:', err);
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/analyses', analysisRoutes);
 
-app.get('/api/health', (_, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-  });
+app.get('/api/health', async (_, res) => {
+  try {
+    await connectDB();
+    const mongoose = await import('mongoose');
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      mongodb: mongoose.default.connection.readyState === 1
+        ? 'connected'
+        : 'disconnected',
+    });
+  } catch {
+    res.json({ status: 'OK', mongodb: 'error' });
+  }
 });
 
-// Connect MongoDB
-if (process.env.MONGODB_URI) {
-  mongoose
-    .connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB connected'))
-    .catch((err: Error) => console.error('❌ MongoDB error:', err.message));
-} else {
-  console.error('❌ MONGODB_URI not set');
-}
-
-// Export for Vercel serverless
 export default app;
