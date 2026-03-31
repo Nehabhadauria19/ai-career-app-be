@@ -28,7 +28,9 @@ app.use(cors({
   origin: [
     process.env.CLIENT_URL || 'http://localhost:3000',
     'http://localhost:3000',
+    'https://ai-career-app-frontend-1.onrender.com',  // ← add this
     /\.vercel\.app$/,
+    /\.onrender\.com$/,  // ← covers all render URLs
   ],
   credentials: true,
 }));
